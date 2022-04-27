@@ -84,3 +84,12 @@ def test_uses_main_section():
 > pattern, `codequery` has a helper method that makes this code
 > become simpler and more readable. The first line in the example
 > above could be: `mainsect = mod.select("main_section")`.
+
+## scripts
+
+Two scripts that use `codequery` to analyze code scripts are also
+provided: `code-outline` and `code-profile`, which are used to
+create code outlines (a listing of the most relevant node
+elements that give the code its outline structure) and code
+profiles (a vector containing an ordered counting of the most
+important elements in the code under analysis).
