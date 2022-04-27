@@ -1,0 +1,58 @@
+#!/usr/bin/python3
+from collections import Counter
+from tokenize import tok_name
+from pathlib import Path
+import json
+import sys
+
+IGNORE_NODES = []
+IGNORE_TOKENS = [
+    'NL', 'NEWLINE', 'INDENT', 'DEDENT', 'ENCODING', 'ENDMARKER', 'COMMENT',
+]
+SIGNODES = [ 'ClassDef', 'FunctionDef', 'Assign', 'Expr', 'For', 'If', 'Return', 'Name', 'Call', 'Subscript', 'BinOp', 'Compare']
+
+from codequery import Module
+
+
+def tokcount(tokens):
+    vector = Counter(tok_name[tk.type] for tk in tokens)
+    for token_type in IGNORE_TOKENS:
+        vector.pop(token_type, None)
+    return json.dumps(vector)
+
+
+def node_type(node):
+    return 1
+
+
+def nodecount(nodes):
+    vector = Counter(nt for nt in nodes.keys())
+    for nt in IGNORE_NODES:
+        vector.pop(nt, None)
+    return vector
+
+
+def sig1(nodes):
+    from collections import namedtuple
+    CodeProfile = namedtuple('CodeProfile', " ".join(SIGNODES))
+    count_map = {}
+    for nt in SIGNODES:
+        count_map[nt] = 0
+
+    for nt in nodes.keys():
+        if nt in SIGNODES:
+            count_map[nt] = len(nodes[nt])
+
+    count = CodeProfile(**count_map)
+    return ".".join(f"{v:02d}" for v in count)
+
+
+def main():
+    path = Path(sys.argv[-1]).expanduser()
+    mod = Module(str(path))
+    sig = sig1(mod.nodes)
+    print(f"{sig} {path}")
+
+
+if __name__ == "__main__":
+    main()

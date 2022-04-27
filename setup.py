@@ -20,5 +20,6 @@ setup(
     python_requires='>3.6',
     scripts=[
         'codequery/code-outline',
+        'codequery/code-profile',
     ],
 )
