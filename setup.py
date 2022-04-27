@@ -18,4 +18,7 @@ setup(
     license='MIT',
     py_modules=['codequery'],
     python_requires='>3.6',
+    scripts=[
+        'codequery/code-outline',
+    ],
 )

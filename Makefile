@@ -35,10 +35,7 @@ clean:
 	find . -type f -name "*.pyc" -exec rm '{}' +
 	find . -type d -name "__pycache__" -exec rmdir '{}' +
 	find . -type d -name ".pytest_cache" -exec rmdir '{}' +
-	rm -rf *.egg-info .coverage
-	rm -rf dist
-	rm -rf build
-	rm -rf venv
+	rm -rf dist build venv *.egg-info .coverage
 
 $(VENV)/bin/twine:
 	$(PIP) install twine

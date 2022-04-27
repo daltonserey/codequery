@@ -17,6 +17,7 @@ class Module(CodeQuery):
         self.filename = filename
         self._bytes = open(self.filename, mode="br").read()
         self.tokens = self.__tokenize()
+        self.errors = []
         self._ast = self.__parse()
         CodeQuery.__init__(self, self._ast)
 

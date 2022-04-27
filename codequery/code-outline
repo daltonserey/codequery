@@ -1,0 +1,36 @@
+#!/bin/env python3
+import sys
+import ast
+
+from codequery import Module
+
+source = sys.argv[1] 
+m = Module(source)
+    
+lines = []
+
+NODETYPES = ["ClassDef", "FunctionDef", "While", "For", "Assign", "Call", "If", "Return"]
+DETAILS = sys.argv[1] == "-d" if len(sys.argv) > 1 else None
+
+class Visitor(ast.NodeVisitor):
+
+    def generic_visit(self, node):
+        nodetype = type(node).__name__
+        if lines and hasattr(node,"lineno") and node.lineno == lines[-1]: return
+        if hasattr(node, "lineno") and nodetype in NODETYPES:
+            lines.append(node.lineno)
+            indentation = node.col_offset * " "
+            if DETAILS:
+                lineno = f" ({node.lineno})"
+                name = node.name if hasattr(node, "name") else ""
+            else:
+                lineno, name = "", ""
+            print(f"{indentation}{nodetype}:{name}{lineno}")
+
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def depth_ast(root):
+        return 1 + max(map(depth_ast, ast.iter_child_nodes(root)), default = 0)
+
+v = Visitor()
+v.visit(m._ast)
