@@ -1,10 +1,10 @@
 import ast
 
+class CodeQueryException(Exception): pass
 
 class CodeQuery:
     def __init__(self, node):
         self._ast = node
-        self.errors = []
         self.nodes = {}
         for node in ast.walk(self._ast):
             self.nodes.setdefault(type(node).__name__, [])
@@ -19,7 +19,16 @@ class CodeQuery:
 
     def _init_called(self):
         def collect_name(node):
-            if hasattr(node, "id"):
+            if type(node) is str:
+                return node
+
+            if type(node) is ast.BinOp:
+                return ""
+
+            elif type(node) is ast.Import:
+                return node.names
+
+            elif hasattr(node, "id"):
                 return node.id
 
             elif hasattr(node, "value"):
@@ -28,30 +37,30 @@ class CodeQuery:
             elif hasattr(node, "func"):
                 return collect_name(node.func) + ".func"
             
-            raise Exception("sorry: unpredicted type of node")
-
+            msg = f"fatal: unpredicted node type: {node.__class__.__name__}"
+            msg += f" at line {node.lineno}" if hasattr(node, "lineno") else ""
+            raise CodeQueryException(msg)
 
         self.called = {}
         for call in self.nodes.get('Call', []):
-            #newobj = __name(call._ast.func)
             if type(call.func) is ast.Name:
                 # call is a normal function call
                 self.called.setdefault(f"{call.func.id}", []).append(None)
 
             elif type(call.func) is ast.Attribute:
                 # call is a method call
-                cn = CodeQuery(call)
+                #cn = CodeQuery(call)
                 obj = collect_name(call.func)
                 method = call.func.attr
                 self.called.setdefault(f"{method}", []).append(obj)
 
     def _init_imported(self):
         self.imported = set({})
-        for imp in self.nodes['Import']:
+        for imp in self.nodes.get('Import', []):
             for alias in imp.names:
                 self.imported.add(alias.name)
 
-        for imp in self.nodes['ImportFrom']:
+        for imp in self.nodes.get('ImportFrom', []):
             for alias in imp.names:
                 self.imported.add(f"{imp.module}.{alias.name}")
 
@@ -71,6 +80,9 @@ class CodeQuery:
             self._init_imported()
 
         return name in self.imported
+
+    def imports_not(self, name):
+        return not self.imports(name)
 
     def defs_function(self, name):
         if self.defined_functions is None:
@@ -100,6 +112,9 @@ class CodeQuery:
         else:
             return obj in self.called.get(function, [])
 
+    def calls_not(self, arg1):
+        return not self.calls(arg1)
+
     def count(self, element):
         name = element if type(element) is str else element.__name__
         return len(self.nodes.get(name, []))
@@ -122,8 +137,14 @@ class CodeQuery:
     def uses(self, element):
         return bool(self.select(element))
 
+    def uses_not(self, element):
+        return not self.uses(element)
+
     def has(self, element):
         return self.uses(element)
+
+    def has_not(self, element):
+        return not self.has(element)
 
     def defines(self, *args):
         return "TBD"
