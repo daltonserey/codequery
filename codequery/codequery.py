@@ -17,6 +17,16 @@ class CodeQuery:
         self.defined_functions = None
         self.defined_classes = None
 
+    @property
+    def imported(self):
+        if self._imported is None:
+            self._init_imported()
+        return self._imported
+
+    @imported.setter
+    def imported(self, value):
+        self._imported = value
+
     def _init_called(self):
         def collect_name(node):
             if type(node) is str:
@@ -75,14 +85,16 @@ class CodeQuery:
             self.defined_classes.add(fun.name)
 
     def imports(self, name):
-        # lookup import
-        if self.imported is None:
-            self._init_imported()
-
         return name in self.imported
 
-    def imports_not(self, name):
+    def imports_from(self, name):
+        return any(m.startswith(f"{name}.") for m in self.imported)
+
+    def not_imports(self, name):
         return not self.imports(name)
+
+    def not_imports_from(self, name):
+        return not self.imports_from(name)
 
     def defs_function(self, name):
         if self.defined_functions is None:
@@ -112,7 +124,7 @@ class CodeQuery:
         else:
             return obj in self.called.get(function, [])
 
-    def calls_not(self, arg1):
+    def not_calls(self, arg1):
         return not self.calls(arg1)
 
     def count(self, element):
@@ -137,13 +149,13 @@ class CodeQuery:
     def uses(self, element):
         return bool(self.select(element))
 
-    def uses_not(self, element):
+    def not_uses(self, element):
         return not self.uses(element)
 
     def has(self, element):
         return self.uses(element)
 
-    def has_not(self, element):
+    def not_has(self, element):
         return not self.has(element)
 
     def defines(self, *args):
