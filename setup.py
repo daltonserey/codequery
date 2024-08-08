@@ -19,7 +19,7 @@ setup(
     packages=find_packages(),
     python_requires='>3.6',
     scripts=[
-        'codequery/code-outline',
-        'codequery/code-profile',
+        'scripts/code-outline',
+        'scripts/code-profile',
     ],
 )
